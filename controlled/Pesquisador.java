@@ -14,7 +14,6 @@ public class Pesquisador extends Thread {
 
 	public Pesquisador(String nome, Long tam_min, Long tam_max, Date data_min,
 			Date data_max, String conteudo) {
-		super();
 		this.nome = nome;
 		this.tam_min = tam_min;
 		this.tam_max = tam_max;
@@ -24,7 +23,7 @@ public class Pesquisador extends Thread {
 	}
 
 	public void run() {
-		while (Main.caminhos.peek() != null) {
+		while (Main.caminhos.size() > 0) {
 			File path = Main.caminhos.remove();
 			if (!path.canRead()) {
 				return;
@@ -48,10 +47,8 @@ public class Pesquisador extends Thread {
 						return fnome.matches(nome)
 								&& tam >= tam_min
 								&& tam <= tam_max
-								&& (modif.after(data_min) || modif
-										.equals(data_min))
-								&& (modif.before(data_max) || modif
-										.equals(data_max));
+								&& (!modif.before(data_min))
+								&& (!modif.after(data_max));
 					}
 				});
 				for (File arq : matches) {

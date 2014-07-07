@@ -1,6 +1,6 @@
 package controlled;
+
 import java.io.File;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -9,12 +9,16 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Scanner;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 
 public class Main {
 	public static Semaphore pesquisadores = new Semaphore(6);
-	public static Queue<File> caminhos = new LinkedList<File>(); 
-	public static ArrayBlockingQueue<File> encontrados = new ArrayBlockingQueue<File>(4);
+	public static Executor threads = Executors.newFixedThreadPool(12);
+	public static Queue<File> caminhos = new LinkedList<File>();
+	public static ArrayBlockingQueue<File> encontrados = new ArrayBlockingQueue<File>(
+			4);
 
 	public static void main(String[] args) {
 		Scanner in = new Scanner(System.in);
@@ -110,24 +114,27 @@ public class Main {
 		conteudo = in.nextLine();
 
 		System.out.print("Que diretório deseja pesquisar? ");
-		Path path;
+		File file;
 		while (true) {
 			String aux = in.nextLine();
 			if (aux.isEmpty()) {
 				aux = ".";
 			}
-			path = Paths.get(aux).normalize();
-			if (path.toFile().isDirectory()) {
-				caminhos.add(path.toFile());
-				break;
-			} else {
+			file = Paths.get(aux).normalize().toFile();
+			if (!file.isDirectory()) {
 				System.out.println("O diretório não existe. Tente novamente: ");
+			} else {
+				break;
 			}
 		}
 
-		Pesquisador aux = new Pesquisador(nome, tam_min, tam_max, data_min,
-				data_max, conteudo);
-		aux.start();
+		
+		caminhos.add(file);
+		for (int i = 0; i < 12; ++i) {
+			Pesquisador aux = new Pesquisador(nome, tam_min, tam_max, data_min,
+					data_max, conteudo);
+			threads.execute(aux);
+		}
 
 		in.close();
 
