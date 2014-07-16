@@ -39,7 +39,7 @@ public class Pesquisador extends Thread {
 			});
 			for (File subdir : subdirs) {
 				Task.setTask(subdir);
-				Main.threads.execute(new Pesquisador(nome, tam_min, tam_max, data_min, data_max, conteudo));
+				Main.threads.submit(new Pesquisador(nome, tam_min, tam_max, data_min, data_max, conteudo));
 			}
 
 			File[] matches = path.listFiles(new FileFilter() {
@@ -69,10 +69,7 @@ public class Pesquisador extends Thread {
 				}
 			}
 			Main.pesquisadores.release();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InterruptedException e) {
+		} catch (IOException | InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

@@ -118,8 +118,7 @@ public class Main {
 		in.close();
 		
 		Task.setTask(file);
-		Pesquisador aux = new Pesquisador(nome, tam_min, tam_max, data_min, data_max, conteudo);
-		threads.execute(aux);
+		threads.submit(new Pesquisador(nome, tam_min, tam_max, data_min, data_max, conteudo));
 		
 		Print printer = new Print();
 		printer.start();
