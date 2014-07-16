@@ -5,18 +5,12 @@ import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.LinkedList;
-import java.util.Queue;
 import java.util.Scanner;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.*;
 
 public class Main {
 	public static Semaphore pesquisadores = new Semaphore(6);
-	public static Executor threads = Executors.newFixedThreadPool(12);
-	public static Queue<File> caminhos = new LinkedList<File>();
+	public static ExecutorService threads = Executors.newFixedThreadPool(12);
 	public static ArrayBlockingQueue<File> encontrados = new ArrayBlockingQueue<File>(
 			4);
 
@@ -32,8 +26,7 @@ public class Main {
 			nome = nome.replaceAll("\\.", "\\\\.").replaceAll("\\*", ".*");
 		}
 
-		System.out
-				.print("Que extensão de arquivo deseja pesquisar (sem ponto)? ");
+		System.out.print("Que extensão de arquivo deseja pesquisar (sem ponto)? ");
 		String extensao;
 		extensao = in.nextLine().trim();
 		if (!extensao.isEmpty()) {
@@ -42,8 +35,7 @@ public class Main {
 		nome += extensao.replaceAll("\\*", ".*");
 		System.out.println(nome);
 
-		System.out
-				.print("Que tamanho de arquivo deseja pesquisar?\nÉ possível usar operadores lógicos (<n e >n) e prefixos (k, m, g) ");
+		System.out.print("Que tamanho de arquivo deseja pesquisar?\nÉ possível usar operadores lógicos (<n e >n) e prefixos (k, m, g) ");
 		Long tam_min = 0L, tam_max = Long.MAX_VALUE;
 		while (true) {
 			try {
@@ -81,8 +73,7 @@ public class Main {
 			}
 		}
 
-		System.out
-				.print("Que data de modificação do arquivo deseja pesquisar?\nÉ possível usar operadores lógicos (<n e >n) ");
+		System.out.print("Que data de modificação do arquivo deseja pesquisar?\nÉ possível usar operadores lógicos (<n e >n) ");
 		Date data_min = new Date(0), data_max = new Date();
 		while (true) {
 			try {
@@ -92,16 +83,13 @@ public class Main {
 				}
 				switch (aux.charAt(0)) {
 				case '<':
-					data_max = new SimpleDateFormat("yyyy-mm-dd").parse(aux
-							.substring(1));
+					data_max = new SimpleDateFormat("yyyy-mm-dd").parse(aux.substring(1));
 					break;
 				case '>':
-					data_min = new SimpleDateFormat("yyyy-mm-dd").parse(aux
-							.substring(1));
+					data_min = new SimpleDateFormat("yyyy-mm-dd").parse(aux.substring(1));
 					break;
 				default:
-					data_min = data_max = new SimpleDateFormat("yyyy-mm-dd")
-							.parse(aux);
+					data_min = data_max = new SimpleDateFormat("yyyy-mm-dd").parse(aux);
 				}
 				break;
 			} catch (ParseException e) {
@@ -127,16 +115,20 @@ public class Main {
 				break;
 			}
 		}
-
-		
-		caminhos.add(file);
-		for (int i = 0; i < 12; ++i) {
-			Pesquisador aux = new Pesquisador(nome, tam_min, tam_max, data_min,
-					data_max, conteudo);
-			threads.execute(aux);
-		}
-
 		in.close();
+		
+		Task.setTask(file);
+		Pesquisador aux = new Pesquisador(nome, tam_min, tam_max, data_min, data_max, conteudo);
+		threads.execute(aux);
+		
+		Print printer = new Print();
+		printer.start();
+		try {
+			threads.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		printer.stopp();
 
 		/*
 		 * boolean acabou = false; while (!acabou) { acabou = true; for (int i =

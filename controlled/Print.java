@@ -17,4 +17,8 @@ public class Print extends Thread {
 			}
 		}
 	}
+	
+	public void stopp() {
+		stop = true;
+	}
 }
